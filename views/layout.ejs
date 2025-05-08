@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Rent</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Room Rent</div>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li id="authLinks" style="display: none;">
+                <a href="/login" class="login-link">Login</a>
+                <a href="/register" class="register-link">Register</a>
+            </li>
+            <li id="adminDashboardLink" style="display: none;">
+                <a href="/admin/dashboard" class="admin-link">Post Apartment</a>
+            </li>
+            <li id="userSection" style="display: none;">
+                <span id="userName"></span>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </li>
+        </ul>
+    </nav>
+    
+    <main class="container">
+        <%- content %>
+    </main>
+
+    <script>
+        // Function to update UI based on auth status
+        function updateAuthUI(isLoggedIn, userEmail = '', userRole = '') {
+            const authLinks = document.getElementById('authLinks');
+            const userSection = document.getElementById('userSection');
+            const userName = document.getElementById('userName');
+            const adminDashboardLink = document.getElementById('adminDashboardLink');
+
+            if (isLoggedIn) {
+                authLinks.style.display = 'none';
+                userSection.style.display = 'flex';
+                userName.textContent = userEmail;
+                if (userRole === 'ADMIN') {
+                    adminDashboardLink.style.display = 'flex';
+                } else {
+                    adminDashboardLink.style.display = 'none';
+                }
+            } else {
+                authLinks.style.display = 'flex';
+                userSection.style.display = 'none';
+                adminDashboardLink.style.display = 'none';
+                userName.textContent = '';
+            }
+        }
+
+        // Check authentication status on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (token) {
+                try {
+                    // Decode JWT token to get user info
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    // Fetch user role from /api/auth/me for accuracy
+                    fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        updateAuthUI(true, payload.email, data.role);
+                    })
+                    .catch(() => {
+                        updateAuthUI(true, payload.email, '');
+                    });
+                } catch (error) {
+                    // If token is invalid, clear it and show login
+                    localStorage.removeItem('token');
+                    updateAuthUI(false);
+                }
+            } else {
+                updateAuthUI(false);
+            }
+
+            // Handle logout
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                } finally {
+                    // Clear token and update UI immediately
+                    localStorage.removeItem('token');
+                    updateAuthUI(false);
+                    
+                    // Redirect to home page
+                    window.location.href = '/';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
