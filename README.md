@@ -4,9 +4,6 @@ A modern, full-featured apartment rental platform built with Express.js, EJS tem
 
 ![Apartment Finder](https://example.com/screenshot.png)
 
-## Live Demo
-
-[View the live application](https://your-vercel-url-here.vercel.app)
 
 ## Features
 
@@ -60,63 +57,16 @@ A modern, full-featured apartment rental platform built with Express.js, EJS tem
 
 ## Deployment
 
-### Deploying to Vercel
 
-1. Create an account on [Vercel](https://vercel.com)
-2. Connect your GitHub repository
-3. Configure the following environment variables:
-   - `JWT_SECRET` (your secret key for JWT authentication)
-4. Deploy the application
 
 ### Deploying to Render
 
 This application can be easily deployed to [Render](https://render.com). Follow these steps to deploy:
 
-### Option 1: Deploy via Render Dashboard
 
-1. Create a Render account at https://render.com if you don't have one already
-2. Click on the "New +" button and select "Web Service"
-3. Connect your GitHub repository
-4. Configure your web service:
-   - Name: room-rent-app (or your preferred name)
-   - Environment: Node
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Select the appropriate instance type (Free tier works for initial deployment)
-5. Add the following environment variables:
-   - `NODE_ENV`: production
-   - Any other secret keys or configurations you need
-6. Click "Create Web Service"
 
-### Option 2: Deploy using render.yaml (Blueprint)
 
-1. Fork or clone this repository
-2. Ensure the `render.yaml` file is in the root directory
-3. Go to your Render dashboard
-4. Click on "New" and select "Blueprint"
-5. Connect your GitHub repository
-6. Render will automatically detect the `render.yaml` file and set up the service
-7. Confirm the deployment settings
-8. Click "Apply"
 
-### After Deployment
-
-- Your application will be available at `https://room-rent-app.onrender.com` (or your custom subdomain)
-- The first deployment might take a few minutes to complete
-- The free tier on Render may have some limitations, such as spinning down after periods of inactivity
-
-## Local Development
-
-To run this application locally:
-
-```
-npm install
-npm start
-```
-
-The application will be available at http://localhost:3000
-
-## API Endpoints
 
 ### Authentication
 
