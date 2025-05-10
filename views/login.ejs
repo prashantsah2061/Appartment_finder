@@ -41,10 +41,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            // Store the token
+            // Store token in localStorage as well for API calls
             localStorage.setItem('token', data.token);
-            // Redirect to home page
-            window.location.href = '/';
+            // Check if admin and redirect accordingly
+            if (data.user.role === 'ADMIN') {
+                window.location.href = '/admin/dashboard';
+            } else {
+                window.location.href = '/';
+            }
         } else {
             authError.style.display = 'block';
             authError.textContent = data.message || 'Login failed. Please check your credentials.';

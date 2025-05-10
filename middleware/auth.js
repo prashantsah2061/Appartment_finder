@@ -4,7 +4,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const auth = (req, res, next) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+        // Check for token in Authorization header
+        const headerToken = req.header('Authorization')?.replace('Bearer ', '');
+        
+        // Check for token in cookies
+        const cookieToken = req.cookies?.token;
+        
+        // Use token from header or cookie
+        const token = headerToken || cookieToken;
         
         if (!token) {
             return res.status(401).json({ message: 'No authentication token, access denied' });

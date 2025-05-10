@@ -58,22 +58,19 @@
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             const logoutBtn = document.getElementById('logoutBtn');
-
-            if (token) {
+            
+            // Check if server has passed user data (from cookie)
+            const serverUserInfo = <%= typeof user === 'object' && user ? JSON.stringify(user) : 'null' %>;
+            
+            if (serverUserInfo) {
+                // User is logged in based on server-side cookie check
+                updateAuthUI(true, serverUserInfo.email, serverUserInfo.role);
+            } else if (token) {
+                // Fallback to token if server didn't provide user info
                 try {
                     // Decode JWT token to get user info
                     const payload = JSON.parse(atob(token.split('.')[1]));
-                    // Fetch user role from /api/auth/me for accuracy
-                    fetch('/api/auth/me', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        updateAuthUI(true, payload.email, data.role);
-                    })
-                    .catch(() => {
-                        updateAuthUI(true, payload.email, '');
-                    });
+                    updateAuthUI(true, payload.email, payload.role || '');
                 } catch (error) {
                     // If token is invalid, clear it and show login
                     localStorage.removeItem('token');
@@ -87,10 +84,7 @@
             logoutBtn.addEventListener('click', async () => {
                 try {
                     await fetch('/api/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
+                        method: 'POST'
                     });
                 } catch (error) {
                     console.error('Logout error:', error);

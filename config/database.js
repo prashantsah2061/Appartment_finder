@@ -1,7 +1,7 @@
 const Datastore = require('nedb');
 const path = require('path');
 
-// Determine if we're in production (Vercel) or development
+// Determine if we're in production (Render or Vercel) or development
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Create database instances - use in-memory for production

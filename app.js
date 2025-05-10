@@ -3,6 +3,9 @@ const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
 const authRoutes = require('./routes/auth');
 const apartmentRoutes = require('./routes/apartments');
+const auth = require('./middleware/auth');
+const adminAuth = require('./middleware/adminAuth');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -21,24 +24,62 @@ app.set('layout', 'layout');
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware to check JWT from cookies for views
+const checkJwtFromCookie = (req, res, next) => {
+    const token = req.cookies?.token || '';
+    if (token) {
+        try {
+            const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+            const decoded = jwt.verify(token, JWT_SECRET);
+            req.user = decoded;
+        } catch (error) {
+            console.error('Error verifying token:', error);
+        }
+    }
+    next();
+};
+
+// Add cookie-parser middleware
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+app.use(checkJwtFromCookie);
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/apartments', apartmentRoutes);
 
 // View Routes
 app.get('/', (req, res) => {
-    res.render('home');
+    res.render('home', { user: req.user || null });
 });
 
 app.get('/login', (req, res) => {
+    if (req.user) {
+        return res.redirect('/');
+    }
     res.render('login');
 });
 
 app.get('/register', (req, res) => {
+    if (req.user) {
+        return res.redirect('/');
+    }
     res.render('register');
 });
 
+// Admin routes with protection
 app.get('/admin/dashboard', (req, res) => {
+    // Check if user is authenticated and is an admin
+    if (!req.user) {
+        return res.redirect('/login');
+    }
+    
+    if (req.user.role !== 'ADMIN') {
+        return res.status(403).render('error', { 
+            message: 'Access denied. Admin privileges required.' 
+        });
+    }
+    
     res.render('admin/dashboard');
 });
 
@@ -53,7 +94,7 @@ app.get('/apartment/:id', async (req, res) => {
             });
         }
         
-        res.render('apartment-details', { apartment });
+        res.render('apartment-details', { apartment, user: req.user || null });
     } catch (error) {
         res.status(500).render('error', { 
             message: 'Error loading apartment details' 
@@ -61,13 +102,11 @@ app.get('/apartment/:id', async (req, res) => {
     }
 });
 
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
-}
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
 
-// Export the app for serverless environments
+// Export the app for serverless environments (if needed)
 module.exports = app; 

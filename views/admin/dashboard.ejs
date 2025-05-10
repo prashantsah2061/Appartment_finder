@@ -72,34 +72,18 @@
 // Check if user is admin
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/login';
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/auth/me', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        const data = await response.json();
-        
-        if (data.role !== 'ADMIN') {
-            window.location.href = '/';
-            return;
-        }
-
+    
+    // Administrator check is now handled by the server
+    // Just load apartments if we have a token for API calls
+    if (token) {
         loadApartments();
-    } catch (error) {
-        console.error('Error:', error);
-        window.location.href = '/login';
     }
 });
 
 // Load apartments
 async function loadApartments() {
     try {
+        const token = localStorage.getItem('token');
         const response = await fetch('/api/apartments');
         const apartments = await response.json();
         
