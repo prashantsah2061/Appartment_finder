@@ -24,7 +24,8 @@ router.get('/', async (req, res) => {
         const apartments = await Apartment.findAll();
         res.json(apartments);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error fetching apartments:', error);
+        res.status(500).json({ message: 'Error fetching apartments' });
     }
 });
 
@@ -37,7 +38,8 @@ router.get('/:id', async (req, res) => {
         }
         res.json(apartment);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error fetching apartment:', error);
+        res.status(500).json({ message: 'Error fetching apartment details' });
     }
 });
 
@@ -49,6 +51,11 @@ router.post('/', [auth, adminAuth, validateApartment], async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
+        // Validate images array
+        if (!Array.isArray(req.body.images) || req.body.images.length === 0) {
+            return res.status(400).json({ message: 'At least one image URL is required' });
+        }
+
         const apartment = await Apartment.create({
             ...req.body,
             createdBy: req.user.id
@@ -56,7 +63,8 @@ router.post('/', [auth, adminAuth, validateApartment], async (req, res) => {
 
         res.status(201).json(apartment);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error creating apartment:', error);
+        res.status(500).json({ message: 'Error creating apartment' });
     }
 });
 
@@ -68,6 +76,11 @@ router.put('/:id', [auth, adminAuth, validateApartment], async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
+        // Validate images array
+        if (!Array.isArray(req.body.images) || req.body.images.length === 0) {
+            return res.status(400).json({ message: 'At least one image URL is required' });
+        }
+
         const apartment = await Apartment.update(req.params.id, req.body);
         if (!apartment) {
             return res.status(404).json({ message: 'Apartment not found' });
@@ -75,7 +88,8 @@ router.put('/:id', [auth, adminAuth, validateApartment], async (req, res) => {
 
         res.json(apartment);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error updating apartment:', error);
+        res.status(500).json({ message: 'Error updating apartment' });
     }
 });
 
@@ -89,7 +103,8 @@ router.delete('/:id', [auth, adminAuth], async (req, res) => {
 
         res.json({ message: 'Apartment deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error deleting apartment:', error);
+        res.status(500).json({ message: 'Error deleting apartment' });
     }
 });
 

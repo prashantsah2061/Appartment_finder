@@ -11,7 +11,7 @@
         <div class="nav-brand">Room Rent</div>
         <ul class="nav-links">
             <li><a href="/">Home</a></li>
-            <li id="authLinks">
+            <li id="authLinks" style="display: flex;">
                 <a href="/login" class="login-link">Login</a>
                 <a href="/register" class="register-link">Register</a>
             </li>
@@ -55,28 +55,37 @@
         }
 
         // Check authentication status on page load
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
             const logoutBtn = document.getElementById('logoutBtn');
             
-            // Check if server has passed user data (from cookie)
-            const serverUserInfo = <%= typeof user === 'object' && user ? JSON.stringify(user) : 'null' %>;
-            
-            if (serverUserInfo) {
-                // User is logged in based on server-side cookie check
-                updateAuthUI(true, serverUserInfo.email, serverUserInfo.role);
-            } else if (token) {
-                // Fallback to token if server didn't provide user info
-                try {
-                    // Decode JWT token to get user info
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    updateAuthUI(true, payload.email, payload.role || '');
-                } catch (error) {
-                    // If token is invalid, clear it and show login
-                    localStorage.removeItem('token');
-                    updateAuthUI(false);
+            try {
+                // First try to get user info from server
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    updateAuthUI(true, userData.email, userData.role);
+                } else {
+                    // If server check fails, try to decode token
+                    if (token) {
+                        try {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            updateAuthUI(true, payload.email, payload.role || '');
+                        } catch (error) {
+                            localStorage.removeItem('token');
+                            updateAuthUI(false);
+                        }
+                    } else {
+                        updateAuthUI(false);
+                    }
                 }
-            } else {
+            } catch (error) {
+                console.error('Error checking auth status:', error);
                 updateAuthUI(false);
             }
 
@@ -84,7 +93,10 @@
             logoutBtn.addEventListener('click', async () => {
                 try {
                     await fetch('/api/auth/logout', {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
                     });
                 } catch (error) {
                     console.error('Logout error:', error);
@@ -99,5 +111,6 @@
             });
         });
     </script>
+    <script id="serverUserInfo" type="application/json"><%= JSON.stringify(user || null) %></script>
 </body>
 </html> 

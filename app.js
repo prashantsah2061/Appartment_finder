@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
+const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/auth');
 const apartmentRoutes = require('./routes/apartments');
 const auth = require('./middleware/auth');
@@ -12,6 +13,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Set EJS as the view engine
 app.set('view engine', 'ejs');
@@ -34,14 +36,14 @@ const checkJwtFromCookie = (req, res, next) => {
             req.user = decoded;
         } catch (error) {
             console.error('Error verifying token:', error);
+            // Clear invalid token
+            res.clearCookie('token');
         }
     }
     next();
 };
 
-// Add cookie-parser middleware
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+// Use JWT check middleware for all routes
 app.use(checkJwtFromCookie);
 
 // API Routes
@@ -57,14 +59,14 @@ app.get('/login', (req, res) => {
     if (req.user) {
         return res.redirect('/');
     }
-    res.render('login');
+    res.render('login', { user: req.user || null });
 });
 
 app.get('/register', (req, res) => {
     if (req.user) {
         return res.redirect('/');
     }
-    res.render('register');
+    res.render('register', { user: req.user || null });
 });
 
 // Admin routes with protection
@@ -76,11 +78,12 @@ app.get('/admin/dashboard', (req, res) => {
     
     if (req.user.role !== 'ADMIN') {
         return res.status(403).render('error', { 
-            message: 'Access denied. Admin privileges required.' 
+            message: 'Access denied. Admin privileges required.',
+            user: req.user || null
         });
     }
     
-    res.render('admin/dashboard');
+    res.render('admin/dashboard', { user: req.user || null });
 });
 
 app.get('/apartment/:id', async (req, res) => {

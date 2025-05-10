@@ -158,6 +158,12 @@ document.getElementById('apartmentForm').addEventListener('submit', async (e) =>
 
     try {
         const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You must be logged in to perform this action');
+            window.location.href = '/login';
+            return;
+        }
+
         const currentApartmentId = document.getElementById('apartmentForm').dataset.apartmentId;
         
         let url = '/api/apartments';
@@ -178,17 +184,25 @@ document.getElementById('apartmentForm').addEventListener('submit', async (e) =>
             body: JSON.stringify(formData)
         });
 
+        const data = await response.json();
+
         if (response.ok) {
             modal.style.display = 'none';
             document.getElementById('apartmentForm').removeAttribute('data-apartment-id');
             loadApartments();
+            alert(method === 'POST' ? 'Apartment added successfully!' : 'Apartment updated successfully!');
         } else {
-            const error = await response.json();
-            alert(error.message || 'Error saving apartment');
+            if (data.errors) {
+                // Handle validation errors
+                const errorMessages = data.errors.map(err => `${err.param}: ${err.msg}`).join('\n');
+                alert('Validation errors:\n' + errorMessages);
+            } else {
+                alert(data.message || 'Error saving apartment');
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error saving apartment');
+        alert('Error saving apartment. Please try again.');
     }
 });
 
